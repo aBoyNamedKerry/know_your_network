@@ -17,7 +17,8 @@ library(magrittr)
 library(janitor)
 library(DT)
 
-srn<- st_read("./Outputs/birmingham_srn.shp")
+srn<- st_read("C:/Users/fooli/OneDrive/Documents/R/know_your_network/Outputs/birmingham_srn.shp")
+#srn <- st_read("./Data/network.shp")
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
@@ -25,73 +26,77 @@ ui <- dashboardPage(skin = "blue",
                     dashboardHeader(title = "Know your network!"),
                     
                     dashboardSidebar(
-                      sidebarMenu(id="tabs",
-                                  sidebarMenuOutput("menu") # we use this for the server to render the dashboard tabs there - we can select by default that way
-                      )
-                    ),
+                                       ),
                     
                     dashboardBody(
-                      tabItems(
-                        
-                        tabItem(tabName = "dashboard", selected = TRUE,
-                                
-                                fluidPage(
+                     
+                        fluidPage(
                                   
                                   # Application title
-                                  titlePanel("Business data by local authority"),
+                                  titlePanel("Event planner"),
                                   
                                   
                                   # Sidebar with a selectInput 
                                   sidebarLayout(
+                                    
                                     sidebarPanel(
+                                       h3("Choose event date range"),
                                       
-                                      h3("Choose event date range"),
                                       #data range input
                                       dateRangeInput(inputId = "data_range", label = "Date Range", 
-                                                     start = "2018-06-01", end = "2018-08-31")
+                                                     start = "2018-06-01", end = "2018-08-31"),
                                       
-                                      
+                                      selectInput(inputId = "segment", label = "Select segment", 
+                                                  choices =  birmingham_srn$ROA_NUMBER
+                                                      )
                                    
                                     ), # end of sidebarPanel
                                     
                                     # Show a plot of the map
                                     mainPanel(
-                                      splitLayout(cellWidths = c("60%", "40%"),
+                                     # splitLayout(cellWidths = c("60%", "40%"),
                                                   
                                       leafletOutput("map"),
                                       
                                       dataTableOutput("events_table")
-                                      )#split layout end
+                                      #)#split layout end
                                     )# end main panel
                                   )# end side panel
                                 )# end fluid page
-                        ),#end of tabItem1
-                        
-                        tabItem(tabName = "enterpriseSize",
-                                
-                                fluidPage(
-                                  
-                                  h4("To be updated")
-                                  
-                                )# end of fluid page tabItem 2
-                                
-                        )#end of tabItem 2
-                      )# end of tabItems
+                   
                     )# dashboard body
 )# End of dashboard page
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
    
-   output$distPlot <- renderPlot({
+   output$map <- renderLeaflet({
       # generate bins based on input$bins from ui.R
-      x    <- faithful[, 2] 
-      bins <- seq(min(x), max(x), length.out = input$bins + 1)
+     srn_pop <- paste0("Road Number: ",
+                       srn$ROA_NUMBER,
+                       "<br>",
+                       "Location: ",
+                       srn$LOCATION)
+     
+     srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
       
-      # draw the histogram with the specified number of bins
-      hist(x, breaks = bins, col = 'darkgray', border = 'white')
+                                      leaflet(srn) %>%
+                                        addProviderTiles(providers$CartoDB.Positron)%>%
+                                        addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
+                                                    color = ~srn_col(srn$Jan_01),
+                                                    popup = ~srn_pop) 
+                                      
+                                      
    })
-}
+   
+   output$events_table<- renderDataTable ({
+     
+     srn %>%
+     datatable()
+     
+   })
+   
+ }
 
 # Run the application 
 shinyApp(ui = ui, server = server)

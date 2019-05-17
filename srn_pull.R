@@ -52,7 +52,7 @@ srn_pop <- paste0("Road Number: ",
                   "Location: ",
                   birmingham_srn$LOCATION)
 
-birmingham_srn_col<- colorFactor(c("red", "green"), as.factor(brimingham_srn$Jan_01))
+birmingham_srn_col<- colorFactor(c("red", "green"), as.factor(birmingham_srn$Jan_01))
 
 #leflet map for polygons with fill
 leaflet(birmingham_srn) %>%
