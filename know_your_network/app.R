@@ -26,7 +26,10 @@ ui <- dashboardPage(skin = "blue",
                     dashboardHeader(title = "Know your network!"),
                     
                     dashboardSidebar(
-                                       ),
+                      sidebarMenu(
+                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"))
+                      )
+                                       ), # end of dashboard sidebar
                     
                     dashboardBody(
                      
@@ -47,7 +50,7 @@ ui <- dashboardPage(skin = "blue",
                                                      start = "2018-06-01", end = "2018-08-31"),
                                       
                                       selectInput(inputId = "segment", label = "Select segment", 
-                                                  choices =  birmingham_srn$ROA_NUMBER
+                                                  choices =  srn$ROA_NUMBER
                                                       )
                                    
                                     ), # end of sidebarPanel
