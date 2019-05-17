@@ -17,9 +17,10 @@ library(magrittr)
 library(janitor)
 library(DT)
 
+
 srn <- st_read("../Outputs/birmingham_srn.shp")
 events <- read.csv("../Data/events_next_week_birmingham.csv")
-#srn <- st_read("./Data/network.shp")
+#srn <- st_read("../Data/network.shp")
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
@@ -28,21 +29,14 @@ ui <- dashboardPage(skin = "blue",
                     
                     dashboardSidebar(
                                        ),
-                    
                     dashboardBody(
-                     
                         fluidPage(
-                                  
                                   # Application title
                                   titlePanel("Event planner"),
-                                  
-                                  
                                   # Sidebar with a selectInput 
                                   sidebarLayout(
-                                    
                                     sidebarPanel(
                                        h3("Choose event date range"),
-                                      
                                       #data range input
                                       dateRangeInput(inputId = "data_range", label = "Date Range", 
                                                      start = "2018-06-01", end = "2018-08-31"),
@@ -81,7 +75,7 @@ server <- function(input, output) {
    srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
    m <- leaflet(srn) %>%
       addProviderTiles(providers$CartoDB.Positron)%>%
-      addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
+      addPolylines(stroke = TRUE, fillOpacity = 0, weight = 1,
                   color = ~srn_col(srn$Jan_01),
                   popup = ~srn_pop)
    m %>%
