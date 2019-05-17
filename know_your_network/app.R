@@ -17,7 +17,7 @@ library(magrittr)
 library(janitor)
 library(DT)
 
-srn<- st_read("C:/Users/fooli/OneDrive/Documents/R/know_your_network/Outputs/birmingham_srn.shp")
+srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
 
 # Define UI for application that draws a histogram
