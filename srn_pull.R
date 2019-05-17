@@ -11,11 +11,12 @@ library(leaflet)
 srn <- st_read("./Data/network.shp")
 
 
-View(srn)
-
-
+#filter by cities
 manchester_srn<- srn %>% filter(AUTHO_NAME == "Manchester")
 birmingham_srn<- srn %>% filter(AUTHO_NAME == "Birmingham")
+birmingham_srn_wider<- srn %>% filter(AUTHO_NAME %in% c("Birmingham","Coventy", "Dudley",
+                                             "Sandwell", "Solihull", "Staffordshire",
+                                             "Walsall", "Warwickshire"))
 
 
 
@@ -25,8 +26,13 @@ plot(birmingham_srn)
 #transform data
 birmingham_srn<- st_transform(birmingham_srn, crs = "+init=epsg:4326")
 
+
 #transfomr srn
 srn<- st_transform(srn, crs = "+init=epsg:4326")
+
+#tranform Birmingham srn_wider
+birmingham_srn_wider<- st_transform(birmingham_srn_wider, crs = "+init=epsg:4326")
+
 
 #add series of dates
 
@@ -44,8 +50,10 @@ birmingham_srn <- birmingham_srn %>% mutate(Jan_01 =
                             sample(x = c("Y", "N"), size = nrow(birmingham_srn), 
                                    replace = TRUE, prob = c(0.05, 0.95)))
 
-
+#write out as sspacial objects
 write_sf(birmingham_srn, "./Outputs/birmingham_srn.shp")
+write_sf(birmingham_srn_wider, "./Outputs/birmingham_srn_wider.shp")
+
 
 ##build leaflet map ----
 
