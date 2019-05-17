@@ -19,7 +19,7 @@ library(DT)
 
 
 srn <- st_read("../Outputs/birmingham_srn.shp")
-events <- read.csv("../Data/events_next_week_birmingham.csv")
+events <- read_csv("../Data/events_next_week_birmingham.csv")
 #srn <- st_read("../Data/network.shp")
 
 # Define UI for application that draws a histogram
@@ -43,14 +43,17 @@ ui <- dashboardPage(skin = "blue",
                                   sidebarLayout(
                                     sidebarPanel(
                                        h3("Choose event date range"),
-                                      #data range input
-                                      dateRangeInput(inputId = "data_range", label = "Date Range", 
-                                                     start = "2018-06-01", end = "2018-08-31"),
+                                      #data range in
+                                      dateRangeInput(inputId = "date_range", label = "Date Range", 
+                                                     start = min(events$startDate), 
+                                                     end = max(events$startDate)),
                                       
                                       selectInput(inputId = "segment", label = "Select segment", 
                                                   choices =  srn$SECT_LABEL, 
                                                   selected =  srn$SECT_LABEL[1]
-                                                      )
+                                                      ),
+                                      selectInput(inputId = "hour", label = "Select hour",
+                                                  choices = c(0,1:23), selected = 12)
                                    
                                     ), # end of sidebarPanel
                                     
@@ -74,7 +77,16 @@ ui <- dashboardPage(skin = "blue",
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   output$map <- renderLeaflet({
+   
+  #create reactive events object
+  events_react<- reactive({
+    
+    df<- events %>% filter(startDate>= input$date_range[1],
+                           startDate<= input$date_range[1])
+    
+  })
+  
+  output$map <- renderLeaflet({
 
    # generate bins based on input$bins from ui.R
    srn_pop <- paste0("Road Number: ",
@@ -95,7 +107,7 @@ server <- function(input, output) {
 
    output$events_table<- renderDataTable ({
 
-     srn %>% select(ROA_NUMBER,SECT_LABEL, LOCATION) %>%
+     events_table %>% select(ROA_NUMBER,SECT_LABEL, LOCATION) %>%
      datatable()
    })
  }
