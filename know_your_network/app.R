@@ -32,6 +32,8 @@ ui <- dashboardPage(skin = "blue",
                                        ), # end of dashboard sidebar
                     
                     dashboardBody(
+                      tabItems(
+                        tabItem(tabName = "dashboard",
                      
                         fluidPage(
                                   
@@ -50,7 +52,8 @@ ui <- dashboardPage(skin = "blue",
                                                      start = "2018-06-01", end = "2018-08-31"),
                                       
                                       selectInput(inputId = "segment", label = "Select segment", 
-                                                  choices =  srn$ROA_NUMBER
+                                                  choices =  srn$SECT_LABEL, 
+                                                  selected =  srn$SECT_LABEL[1]
                                                       )
                                    
                                     ), # end of sidebarPanel
@@ -59,15 +62,18 @@ ui <- dashboardPage(skin = "blue",
                                     mainPanel(
                                      # splitLayout(cellWidths = c("60%", "40%"),
                                                   
-                                      leafletOutput("map"),
+                                      box(leafletOutput("map"), width = 12, height = "450px"),
                                       
-                                      dataTableOutput("events_table")
+                                      box(dataTableOutput("events_table"),
+                                          width = 12)
+                                      
                                       #)#split layout end
                                     )# end main panel
                                   )# end side panel
                                 )# end fluid page
-                   
-                    )# dashboard body
+                        ) #end of tabitem 
+                      ) # end of tabitems
+                   )# dashboard body
 )# End of dashboard page
 
 # Define server logic required to draw a histogram
@@ -83,18 +89,17 @@ server <- function(input, output) {
      
      srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
       
-                                      leaflet(srn) %>%
-                                        addProviderTiles(providers$CartoDB.Positron)%>%
-                                        addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
-                                                    color = ~srn_col(srn$Jan_01),
-                                                    popup = ~srn_pop) 
+     leaflet(srn) %>%
+      addProviderTiles(providers$CartoDB.Positron)%>%
+      addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
+                  color = ~srn_col(srn$Jan_01),popup = ~srn_pop) 
                                       
                                       
    })
    
    output$events_table<- renderDataTable ({
      
-     srn %>%
+     srn %>% select(ROA_NUMBER,SECT_LABEL, LOCATION) %>%
      datatable()
      
    })
