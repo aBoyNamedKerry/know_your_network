@@ -17,7 +17,8 @@ library(magrittr)
 library(janitor)
 library(DT)
 
-srn<- st_read("../Outputs/birmingham_srn.shp")
+srn <- st_read("../Outputs/birmingham_srn.shp")
+events <- read.csv("../Data/events_next_week_birmingham.csv")
 #srn <- st_read("./Data/network.shp")
 
 # Define UI for application that draws a histogram
@@ -47,7 +48,7 @@ ui <- dashboardPage(skin = "blue",
                                                      start = "2018-06-01", end = "2018-08-31"),
                                       
                                       selectInput(inputId = "segment", label = "Select segment", 
-                                                  choices =  birmingham_srn$ROA_NUMBER
+                                                  choices = srn$ROA_NUMBER
                                                       )
                                    
                                     ), # end of sidebarPanel
@@ -57,7 +58,7 @@ ui <- dashboardPage(skin = "blue",
                                      # splitLayout(cellWidths = c("60%", "40%"),
                                                   
                                       leafletOutput("map"),
-                                      
+
                                       dataTableOutput("events_table")
                                       #)#split layout end
                                     )# end main panel
@@ -69,35 +70,29 @@ ui <- dashboardPage(skin = "blue",
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   
    output$map <- renderLeaflet({
-      # generate bins based on input$bins from ui.R
-     srn_pop <- paste0("Road Number: ",
-                       srn$ROA_NUMBER,
-                       "<br>",
-                       "Location: ",
-                       srn$LOCATION)
-     
-     srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
-      
-                                      leaflet(srn) %>%
-                                        addProviderTiles(providers$CartoDB.Positron)%>%
-                                        addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
-                                                    color = ~srn_col(srn$Jan_01),
-                                                    popup = ~srn_pop) 
-                                      
-                                      
+   # generate bins based on input$bins from ui.R
+   srn_pop <- paste0("Road Number: ",
+                     srn$ROA_NUMBER,
+                     "<br>",
+                     "Location: ",
+                     srn$LOCATION)
+
+   srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
+   m <- leaflet(srn) %>%
+      addProviderTiles(providers$CartoDB.Positron)%>%
+      addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
+                  color = ~srn_col(srn$Jan_01),
+                  popup = ~srn_pop)
+   m %>%
+      addMarkers(lng=events$venue.location.lon, lat=events$venue.location.lat, popup=events$headline)
    })
-   
+
    output$events_table<- renderDataTable ({
-     
      srn %>%
      datatable()
-     
    })
-   
  }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
