@@ -18,7 +18,7 @@ library(janitor)
 library(DT)
 
 
-srn <- st_read("../Outputs/birmingham_srn.shp")
+srn <- st_read("../Outputs/birmingham_srn_wider.shp")
 events <- read_csv("../Data/events_next_week_birmingham.csv")
 #srn <- st_read("../Data/network.shp")
 
@@ -82,7 +82,7 @@ server <- function(input, output) {
   events_react<- reactive({
     
     df<- events %>% filter(startDate>= input$date_range[1],
-                           startDate<= input$date_range[1])
+                           startDate<= input$date_range[2])
     
   })
   
@@ -102,12 +102,12 @@ server <- function(input, output) {
                   color = ~srn_col(srn$Jan_01),
                   popup = ~srn_pop)
    m %>%
-      addMarkers(lng=events$venue.location.lon, lat=events$venue.location.lat, popup=events$headline)
+      addMarkers(lng=events_react()$venue.location.lon, lat=events_react()$venue.location.lat, popup=events_react()$headline)
    })
 
    output$events_table<- renderDataTable ({
 
-     events_table %>% select(ROA_NUMBER,SECT_LABEL, LOCATION) %>%
+     events_react() %>% select(headline, startDate, venue.id) %>%
      datatable()
    })
  }
