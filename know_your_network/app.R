@@ -10,7 +10,12 @@ library(DT)
 library(png)
 
 
-srn <- st_read("../Outputs/birmingham_srn_wider.shp")
+srn <- st_read("../Outputs/birmingham_srn_wider.shp") 
+
+srn%<>%
+  mutate(Jan_01 = 
+           sample(x = c("Y", "N"), size = nrow(srn), 
+                  replace = TRUE, prob = c(0.95, 0.05)))
 #logo <- readPNG('../Data/kyn.png')
 #srn <- st_read("./Data/network.shp")
 #events <- read_csv("../Data/events_next_week_birmingham.csv")
@@ -143,6 +148,8 @@ server <- function(input, output) {
   })
 
   output$map <- renderLeaflet({
+    
+    
     
     # generate bins based on input$bins from ui.R
     srn_pop <- paste0("Road Number: ",
