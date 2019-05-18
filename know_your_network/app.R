@@ -19,7 +19,8 @@ library(DT)
 
 srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
-traffic <- read.csv('../Data/M6_traffic.csv', skip = 3)
+traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
+traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
@@ -92,6 +93,9 @@ ui <- dashboardPage(skin = "blue",
                                   h3('Select day of the week. '),
                                   
                                   # data input
+                                  selectInput(inputId = 'segment2', label = 'Select Segment', 
+                                              choices = c('A5', 'M6')),
+                                  
                                   selectInput(inputId = 'weekday', label = 'Weekday', 
                                               choices = c('Monday' = 0, 'Tuesday' = 1, 'Wednesday' = 2, 
                                                           'Thursday' = 3, 'Friday' = 4, 'Saturday' = 5, 
@@ -152,11 +156,18 @@ server <- function(input, output) {
    })
    
    output$traffic_flow <- renderPlot({
+     # select segment
+     if (input$segment2 == 'A5'){
+       data = traffic_A5
+     } else {
+       data = traffic_M6
+     }
+     
      # obtaining days
      id = input$weekday
      
      # plot barchart of number of vehicles every 15 minutes
-     selected_day <- traffic[traffic$Day.Type.ID %in% id, ]
+     selected_day <- data[data$Day.Type.ID %in% id, ]
      aggr <- aggregate(selected_day$Total.Carriageway.Flow, list(selected_day$Local.Time), mean)
      colnames(aggr) <- c('time_of_day', 'traffic_flow')
      attach(aggr)
