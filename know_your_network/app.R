@@ -11,8 +11,8 @@ library(png)
 
 
 logo <- readPNG('../Data/kyn.png')
-srn<- st_read("../Outputs/birmingham_srn.shp")
-#srn <- st_read("./Data/network.shp")
+srn <- st_read("../Outputs/birmingham_srn_wider.shp")
+
 events <- read_csv("../Data/events_next_week_birmingham.csv")
 source("api_call.R")
 #traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
@@ -109,8 +109,7 @@ ui <- dashboardPage(skin = "blue",
                                       # data input
                                       dateInput(inputId = "cal_date", label = "Date Range", 
                                                 min = Sys.Date(),
-                                                format = 'dd-mm-yyyy', 
-                                                datesdisabled = FALSE)
+                                                format = 'dd-mm-yyyy')
                                   ),
                                   mainPanel(
                                       box(column(dataTableOutput('calendar'), width = 12), 
@@ -134,27 +133,28 @@ server <- function(input, output) {
     df
   })
 
-    output$map <- renderLeaflet({
-        # generate bins based on input$bins from ui.R
-        srn_pop <- paste0("Road Number: ",
-                         srn$ROA_NUMBER,
-                         "<br>",
-                         "Section: ",
-                         srn$SECT_LABEL,
-                         "<br>",
-                         "Location: ",
-                         srn$LOCATION)
-
-        srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
-        m <- leaflet(srn) %>%
-            addProviderTiles(providers$CartoDB.Positron)%>%
-            addPolylines(stroke = TRUE, fillOpacity = 0, weight = 1,
-                        color = ~srn_col(srn$Jan_01),
-                        popup = ~srn_pop)
-        m %>%
-            addMarkers(lng=events_react()$venue.location.lon, lat=events_react()$venue.location.lat,
-                       popup=paste0(events_react()$headline, "<br>", events_react()$startDate))
-    })
+  output$map <- renderLeaflet({
+    
+    # generate bins based on input$bins from ui.R
+    srn_pop <- paste0("Road Number: ",
+                      srn$ROA_NUMBER,
+                      "<br>",
+                      "Section: ",
+                      srn$SECT_LABEL,
+                      "<br>",
+                      "Location: ",
+                      srn$LOCATION)
+    
+    srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
+    m <- leaflet(srn) %>%
+      addProviderTiles(providers$CartoDB.Positron)%>%
+      addPolylines(stroke = TRUE, fillOpacity = 0, weight = 1,
+                   color = ~srn_col(srn$Jan_01),
+                   popup = ~srn_pop)
+    m %>%
+      addMarkers(lng=events_react()$venue.location.lon, lat=events_react()$venue.location.lat,
+                 popup=paste0(events_react()$headline, "<br>", events_react()$startDate))
+  })
 
     output$events_table<- renderDataTable ({
         events_react() %>% select(headline, startDate, venue.id) %>%
