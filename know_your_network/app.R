@@ -15,7 +15,7 @@ library(sf)
 library(tidyverse)
 library(magrittr)
 library(janitor)
-library(DT)
+library(DT) 
 
 srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
@@ -27,7 +27,7 @@ traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
-                  
+
     dashboardHeader(title = "Know your network!"),
                     
         dashboardSidebar(
@@ -121,10 +121,10 @@ ui <- dashboardPage(skin = "blue",
             ) # end of tabItem
                                 
         ) # end of tabitems
-        
-    )# dashboard body
-    
-)# End of dashboard page
+           
+    ) # dashboard body
+
+) # End of dashboard page
 
 
 # Define server logic required to draw a histogram
@@ -200,5 +200,6 @@ server <- function(input, output) {
 
  }
 
-# Run the application
+
+# Run the application 
 shinyApp(ui = ui, server = server)
