@@ -36,6 +36,9 @@ ui <- dashboardPage(skin = "blue",
                         )
                     ), # end of dashboard sidebar
                     dashboardBody(
+                      #add CSS
+                      tags$head(
+                        tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")),
                         tabItems(
                             tabItem(tabName = "events",
                             fluidPage(
