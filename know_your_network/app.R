@@ -10,15 +10,21 @@ library(DT)
 library(png)
 
 
-logo <- readPNG('../Data/kyn.png')
-srn<- st_read("../Outputs/birmingham_srn.shp")
+srn <- st_read("../Outputs/birmingham_srn_wider.shp") 
+
+srn%<>%
+  mutate(Jan_01 = 
+           sample(x = c("Y", "N"), size = nrow(srn), 
+                  replace = TRUE, prob = c(0.95, 0.05)))
+#logo <- readPNG('../Data/kyn.png')
 #srn <- st_read("./Data/network.shp")
-events <- read_csv("../Data/events_next_week_birmingham.csv")
+#events <- read_csv("../Data/events_next_week_birmingham.csv")
+
 source("api_call.R")
 #traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
 traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
 traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
-planned_works <- read.csv('../Data/planned_works.csv', stringsAsFactors = FALSE)
+planned_works <- read.csv('../Data/planned_works.csv', stringAsFactors = FALSE)
 colnames(planned_works) <- c('startDate', 'startTime', 'endDate', 'endTime', 'workType', 'description')
 planned_works$startDate <- as.Date(as.character(planned_works$startDate))
 planned_works$endDate <- as.Date(as.character(planned_works$endDate))
@@ -32,10 +38,13 @@ ui <- dashboardPage(skin = "blue",
                         sidebarMenu(
                             menuItem("Events Planner", tabName = "events", icon = icon("dashboard")),
                             menuItem('Analysis', tabName = 'analysis', icon = icon('bar-chart-o')), 
-                            menuItem('Conflict Management', tabName = 'conflict', icon = icon('calendar'))
+                            menuItem('Conflict Management', tabName = 'evaluation', icon = icon('calendar'))
                         )
                     ), # end of dashboard sidebar
                     dashboardBody(
+                      #add CSS
+                      tags$head(
+                        tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")),
                         tabItems(
                             tabItem(tabName = "events",
                             fluidPage(
@@ -46,13 +55,17 @@ ui <- dashboardPage(skin = "blue",
                                     sidebarPanel(
                                         h3("Choose event date range"),
                                         #data range in
-                                        dateRangeInput(inputId = "date_range", label = "Date Range", 
-                                            start = Sys.Date(),
-                                            end = Sys.Date() + 3,
-                                            min = Sys.Date()
-                                            ),
-                                                  
-                                        selectInput(inputId = "segment", label = "Select Segment", 
+                                        dateRangeInput(inputId = "date_range",
+                                                       label = "Date Range",
+                                                       start = Sys.Date(),
+                                                       end = Sys.Date() + 3,
+                                                       min = Sys.Date()
+                                                       ),
+                                        selectInput(inputId = 'area',
+                                                    label = 'Select area',
+                                                    c('Birmingham', 'Manchester', 'Portsmouth')
+                                                    ),
+                                        selectInput(inputId = "segment", label = "Select segment", 
                                                     choices =  srn$SECT_LABEL, 
                                                     selected =  srn$SECT_LABEL[1]
                                                         ),
@@ -93,7 +106,7 @@ ui <- dashboardPage(skin = "blue",
                                                     selected = 0,
                                                     multiple = TRUE),
                                         sliderInput(inputId = 'time', label = 'Time',
-                                                    min = 0, max = 24, value = c(12, 14), post = ':00')
+                                                    min = 0, max = 24, value = c(9, 11), post = ':00')
                                     ),
             
                                     mainPanel(
@@ -103,7 +116,7 @@ ui <- dashboardPage(skin = "blue",
                             ) # end of fluidPage
                         ), # end of tabItem
                         
-                        tabItem(tabName = 'conflict',
+                        tabItem(tabName = 'evaluation',
                             fluidPage(
                               # tab/page title
                               titlePanel('Conflict Management'),
@@ -113,8 +126,7 @@ ui <- dashboardPage(skin = "blue",
                                       # data input
                                       dateInput(inputId = "cal_date", label = "Date Range", 
                                                 min = Sys.Date(),
-                                                format = 'dd-mm-yyyy', 
-                                                datesdisabled = FALSE)
+                                                format = 'dd-mm-yyyy')
                                   ),
                                   mainPanel(
                                       box(column(dataTableOutput('calendar'), width = 12), 
@@ -131,40 +143,44 @@ ui <- dashboardPage(skin = "blue",
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    #create reactive events object
+  #create reactive events object
   events_react <- reactive({
-    df <- get_events(date_from = input$date_range[1],
+    df <- get_events(location = input$area,
+                     date_from = input$date_range[1],
                      date_to = input$date_range[2])
     df
   })
 
-    output$map <- renderLeaflet({
-        # generate bins based on input$bins from ui.R
-        srn_pop <- paste0("Road Number: ",
-                         srn$ROA_NUMBER,
-                         "<br>",
-                         "Section: ",
-                         srn$SECT_LABEL,
-                         "<br>",
-                         "Location: ",
-                         srn$LOCATION)
-
-        srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
-        m <- leaflet(srn) %>%
-            addProviderTiles(providers$CartoDB.Positron)%>%
-            addPolylines(stroke = TRUE, fillOpacity = 0, weight = 1,
-                        color = ~srn_col(srn$Jan_01),
-                        popup = ~srn_pop)
-        m %>%
-            addMarkers(lng=events_react()$venue.location.lon, lat=events_react()$venue.location.lat,
-                       popup=paste0(events_react()$headline, "<br>", events_react()$startDate))
-    })
+  output$map <- renderLeaflet({
+    
+    
+    
+    # generate bins based on input$bins from ui.R
+    srn_pop <- paste0("Road Number: ",
+                      srn$ROA_NUMBER,
+                      "<br>",
+                      "Section: ",
+                      srn$SECT_LABEL,
+                      "<br>",
+                      "Location: ",
+                      srn$LOCATION)
+    
+    srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
+    m <- leaflet(srn) %>%
+      addProviderTiles(providers$CartoDB.Positron)%>%
+      addPolylines(stroke = TRUE, fillOpacity = 0, weight = 1,
+                   color = ~srn_col(srn$Jan_01),
+                   popup = ~srn_pop)
+    m %>%
+      addMarkers(lng=events_react()$venue.location.lon, lat=events_react()$venue.location.lat,
+                 popup=paste0(events_react()$headline, "<br>", events_react()$startDate))
+  })
 
     output$events_table<- renderDataTable ({
-        events_react() %>% select(headline, startDate, venue.id) %>%
+        events_react() %>% select(headline, title, startDate, endDate, venue.name, venue.address.streetAddress) %>%
         datatable()
     })
-    
+
     observeEvent(input$book, {
         start_date <- as.character(input$date_range[1])
         end_date <- as.character(input$date_range[2])
@@ -175,8 +191,8 @@ server <- function(input, output) {
         road_work_info <- c(start_date, start_time, end_date, end_time, work_type, desc)
         planned_works <- rbind(planned_works, road_work_info)
         write.csv(planned_works, file = '../Data/planned_works.csv', row.names = FALSE)
-    })
-
+    })  
+  
     output$traffic_flow <- renderPlot({
         # select segment
         if (input$segment2 == 'A5'){
@@ -187,20 +203,20 @@ server <- function(input, output) {
         
         # obtaining days
         id = input$weekday
-        
+
         # plot barchart of number of vehicles every 15 minutes
         selected_day <- data[data$Day.Type.ID %in% id, ]
         aggr <- aggregate(selected_day$Total.Carriageway.Flow, list(selected_day$Local.Time), mean)
         colnames(aggr) <- c('time_of_day', 'traffic_flow')
         attach(aggr)
         barplot(traffic_flow, width = .25, space = 0, names.arg = time_of_day, xlim = c(0, 24))
-        
+
         start_time = input$time[1]
         end_time = input$time[2]
         abline(v = start_time, col = 'blue', lwd = 2)
         abline(v = end_time, col = 'blue', lwd = 2)
     })
-     
+
     output$calendar <- renderDataTable({
         events_on_the_day <- events %>% filter(startDate <= input$cal_date & endDate >= input$cal_date) %>%
             select(c(startDate, startTime = 'startTimeString', endDate, endTime = 'endTimeString', title, description)) %>%
@@ -217,3 +233,4 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
