@@ -17,20 +17,21 @@ library(magrittr)
 library(janitor)
 library(DT)
 
-
-srn <- st_read("../Outputs/birmingham_srn_wider.shp")
-events <- read_csv("../Data/events_next_week_birmingham.csv")
-source("api_call.R")
-
+srn<- st_read("../Outputs/birmingham_srn.shp")
+#srn <- st_read("./Data/network.shp")
+#traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
+traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
+traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
-                    
+                  
                     dashboardHeader(title = "Know your network!"),
                     
                     dashboardSidebar(
                       sidebarMenu(
-                        menuItem("Events", tabName = "events", icon = icon("dashboard"))
+                        menuItem("Events", tabName = "events", icon = icon("dashboard")),
+                        menuItem('Analysis', tabName = 'analysis', icon = icon('bar-chart-o'))
                       )
                                        ), # end of dashboard sidebar
                     
@@ -73,31 +74,72 @@ ui <- dashboardPage(skin = "blue",
                                     )# end main panel
                                   )# end side panel
                                 )# end fluid page
-                        ) #end of tabitem 
+                        ) #end of tabitem
+                        tabItem(tabName = 'analysis',
+
+        fluidRow(
+
+          # tab/page title
+          titlePanel('Analysis'),
+
+          sidebarLayout(
+
+            sidebarPanel(
+
+              h3('Select day of the week. '),
+
+              # data input
+              selectInput(inputId = 'segment2', label = 'Select Segment',
+                          choices = c('A5', 'M6')),
+
+              selectInput(inputId = 'weekday', label = 'Weekday',
+                          choices = c('Monday' = 0, 'Tuesday' = 1, 'Wednesday' = 2,
+                                      'Thursday' = 3, 'Friday' = 4, 'Saturday' = 5,
+                                      'Saunday' = 6),
+                          selected = 0,
+                          multiple = TRUE),
+
+              sliderInput(inputId = 'time', label = 'Time',
+                          min = 0, max = 24, value = c(9, 11), post = ':00')
+
+            ),
+
+            mainPanel(
+
+              plotOutput('traffic_flow')
+
+            ) # end of sidebarPanel
+
+          ) # end of sidebarLayout
+
+        ) # end of fluidPage
+
+      ) # end of tabItem
+                        
                       ) # end of tabitems
                    )# dashboard body
 )# End of dashboard page
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   
+
   #create reactive events object
   events_react<- reactive({
-    
+
     df<- events %>% filter(startDate>= input$date_range[1],
                            startDate<= input$date_range[2])
 
 
-  
+
     # df<- get_events(date_from = input$date_range[1],
     #                 date_to = input$date_range[2])
     # df %>%
     #   dplyr::select(headline, startDate, venue.id, venue.location.lat,
     #          venue.location.lon) %>% filter(!is.na(venue.location.lon))
     # df
-    # 
+    #
   })
-    
+
   output$map <- renderLeaflet({
 
    # generate bins based on input$bins from ui.R
@@ -126,7 +168,32 @@ server <- function(input, output) {
      events_react() %>% select(headline, startDate, venue.id) %>%
      datatable()
    })
+
+   output$traffic_flow <- renderPlot({
+     # select segment
+     if (input$segment2 == 'A5'){
+       data = traffic_A5
+     } else {
+       data = traffic_M6
+     }
+
+     # obtaining days
+     id = input$weekday
+
+     # plot barchart of number of vehicles every 15 minutes
+     selected_day <- data[data$Day.Type.ID %in% id, ]
+     aggr <- aggregate(selected_day$Total.Carriageway.Flow, list(selected_day$Local.Time), mean)
+     colnames(aggr) <- c('time_of_day', 'traffic_flow')
+     attach(aggr)
+     barplot(traffic_flow, width = .25, space = 0, names.arg = time_of_day, xlim = c(0, 24))
+
+     start_time = input$time[1]
+     end_time = input$time[2]
+     abline(v = start_time, col = 'blue', lwd = 2)
+     abline(v = end_time, col = 'blue', lwd = 2)
+   })
+
  }
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
