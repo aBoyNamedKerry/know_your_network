@@ -19,6 +19,7 @@ library(DT)
 
 srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
+traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
 traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
 traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
 
@@ -94,7 +95,7 @@ ui <- dashboardPage(skin = "blue",
                                   
                                   # data input
                                   selectInput(inputId = 'segment2', label = 'Select Segment', 
-                                              choices = c('A5', 'M6')),
+                                              choices = c('A38(M)', 'A5', 'M6')),
                                   
                                   selectInput(inputId = 'weekday', label = 'Weekday', 
                                               choices = c('Monday' = 0, 'Tuesday' = 1, 'Wednesday' = 2, 
@@ -157,7 +158,9 @@ server <- function(input, output) {
    
    output$traffic_flow <- renderPlot({
      # select segment
-     if (input$segment2 == 'A5'){
+     if (input$segment2 == 'A38(M)'){
+       data = traffic_A38M
+     } else if (input$segment2 == 'A5'){
        data = traffic_A5
      } else {
        data = traffic_M6
