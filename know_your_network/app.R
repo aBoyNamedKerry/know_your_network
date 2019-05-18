@@ -17,8 +17,9 @@ library(magrittr)
 library(janitor)
 library(DT)
 
-srn<- st_read("C:/Users/fooli/OneDrive/Documents/R/know_your_network/Outputs/birmingham_srn.shp")
+srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
+traffic <- read.csv('../Data/M6_traffic.csv', skip = 3)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
@@ -27,13 +28,18 @@ ui <- dashboardPage(skin = "blue",
                     
                     dashboardSidebar(
                       sidebarMenu(
-                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"))
+                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")), 
+                        menuItem('Analysis', tabName = 'analysis', icon = icon('bar-chart-o'))
                       )
                                        ), # end of dashboard sidebar
                     
                     dashboardBody(
                      
-                        fluidPage(
+                        tabItems(
+                          
+                          tabItem(tabName = 'dashboard', 
+                                  
+                            fluidPage(
                                   
                                   # Application title
                                   titlePanel("Event planner"),
@@ -63,11 +69,57 @@ ui <- dashboardPage(skin = "blue",
                                       
                                       dataTableOutput("events_table")
                                       #)#split layout end
+                                    
                                     )# end main panel
+                                  
                                   )# end side panel
+                                
                                 )# end fluid page
+                          
+                              ),# end tabItem
+                        
+                          tabItem(tabName = 'analysis', 
+                                   
+                            fluidRow(
+                            
+                              # tab/page title
+                              titlePanel('Analysis'),
+                              
+                              sidebarLayout(
+                                
+                                sidebarPanel(
+                                  
+                                  h3('Select day of the week. '),
+                                  
+                                  # data input
+                                  selectInput(inputId = 'weekday', label = 'Weekday', 
+                                              choices = c('Monday' = 0, 'Tuesday' = 1, 'Wednesday' = 2, 
+                                                          'Thursday' = 3, 'Friday' = 4, 'Saturday' = 5, 
+                                                          'Saunday' = 6), 
+                                              selected = 0, 
+                                              multiple = TRUE),
+                                  
+                                  sliderInput(inputId = 'time', label = 'Time', 
+                                              min = 0, max = 24, value = c(9, 11), post = ':00')
+                                  
+                                ), 
+                                
+                                mainPanel(
+                                  
+                                  plotOutput('traffic_flow')
+                                  
+                                ) # end of sidebarPanel
+                                
+                              ) # end of sidebarLayout
+                              
+                            ) # end of fluidPage
+                            
+                          ) # end of tabItem
+                          
+                        ) # end tabItems
                    
                     )# dashboard body
+                    
 )# End of dashboard page
 
 # Define server logic required to draw a histogram
@@ -97,6 +149,23 @@ server <- function(input, output) {
      srn %>%
      datatable()
      
+   })
+   
+   output$traffic_flow <- renderPlot({
+     # obtaining days
+     id = input$weekday
+     
+     # plot barchart of number of vehicles every 15 minutes
+     selected_day <- traffic[traffic$Day.Type.ID %in% id, ]
+     aggr <- aggregate(selected_day$Total.Carriageway.Flow, list(selected_day$Local.Time), mean)
+     colnames(aggr) <- c('time_of_day', 'traffic_flow')
+     attach(aggr)
+     barplot(traffic_flow, width = .25, space = 0, names.arg = time_of_day, xlim = c(0, 24))
+     
+     start_time = input$time[1]
+     end_time = input$time[2]
+     abline(v = start_time, col = 'blue', lwd = 2)
+     abline(v = end_time, col = 'blue', lwd = 2)
    })
    
  }
