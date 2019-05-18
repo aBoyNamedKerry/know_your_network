@@ -10,10 +10,10 @@ library(DT)
 library(png)
 
 
-logo <- readPNG('../Data/kyn.png')
+#logo <- readPNG('../Data/kyn.png')
 srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
-events <- read_csv("../Data/events_next_week_birmingham.csv")
+#events <- read_csv("../Data/events_next_week_birmingham.csv")
 source("api_call.R")
 #traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
 traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
@@ -46,12 +46,16 @@ ui <- dashboardPage(skin = "blue",
                                     sidebarPanel(
                                         h3("Choose event date range"),
                                         #data range in
-                                        dateRangeInput(inputId = "date_range", label = "Date Range", 
-                                            start = Sys.Date(),
-                                            end = Sys.Date() + 3,
-                                            min = Sys.Date()
-                                            ),
-                                                  
+                                        dateRangeInput(inputId = "date_range",
+                                                       label = "Date Range",
+                                                       start = Sys.Date(),
+                                                       end = Sys.Date() + 3,
+                                                       min = Sys.Date()
+                                                       ),
+                                        selectInput(inputId = 'area',
+                                                    label = 'Select area',
+                                                    c('Birmingham', 'Manchester', 'Milton Keynes', 'Portsmouth')
+                                                    ),
                                         selectInput(inputId = "segment", label = "Select segment", 
                                                     choices =  srn$SECT_LABEL, 
                                                     selected =  srn$SECT_LABEL[1]
@@ -127,9 +131,10 @@ ui <- dashboardPage(skin = "blue",
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    #create reactive events object
-  events_react<- reactive({
-    df <- get_events(date_from = input$date_range[1],
+  #create reactive events object
+  events_react <- reactive({
+    df <- get_events(location = input$area,
+                     date_from = input$date_range[1],
                      date_to = input$date_range[2])
     df
   })
@@ -144,6 +149,7 @@ server <- function(input, output) {
                          "<br>",
                          "Location: ",
                          srn$LOCATION)
+        print(input$area)
 
         srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
         m <- leaflet(srn) %>%
