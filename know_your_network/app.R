@@ -24,7 +24,7 @@ source("api_call.R")
 #traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
 traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
 traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
-planned_works <- read.csv('../Data/planned_works.csv')
+planned_works <- read.csv('../Data/planned_works.csv', stringAsFactors = FALSE)
 colnames(planned_works) <- c('startDate', 'startTime', 'endDate', 'endTime', 'workType', 'description')
 planned_works$startDate <- as.Date(as.character(planned_works$startDate))
 planned_works$endDate <- as.Date(as.character(planned_works$endDate))
@@ -36,9 +36,9 @@ ui <- dashboardPage(skin = "blue",
                     DBheader,
                     dashboardSidebar(
                         sidebarMenu(
-                            menuItem("Events", tabName = "events", icon = icon("dashboard")),
+                            menuItem("Events Planner", tabName = "events", icon = icon("dashboard")),
                             menuItem('Analysis', tabName = 'analysis', icon = icon('bar-chart-o')), 
-                            menuItem('Evaluation', tabName = 'evaluation', icon = icon('calendar'))
+                            menuItem('Conflict Management', tabName = 'evaluation', icon = icon('calendar'))
                         )
                     ), # end of dashboard sidebar
                     dashboardBody(
@@ -49,7 +49,7 @@ ui <- dashboardPage(skin = "blue",
                             tabItem(tabName = "events",
                             fluidPage(
                                 # Application title
-                                titlePanel("Event planner"),
+                                titlePanel("Event Planner"),
                                 # Sidebar with a selectInput 
                                 sidebarLayout(
                                     sidebarPanel(
@@ -69,8 +69,12 @@ ui <- dashboardPage(skin = "blue",
                                                     choices =  srn$SECT_LABEL, 
                                                     selected =  srn$SECT_LABEL[1]
                                                         ),
-                                        selectInput(inputId = "hour", label = "Select hour",
-                                                    choices = c(0,1:23), selected = 12)
+                                        selectInput(inputId = "s_hour", label = "Select Start Hour",
+                                                    choices = c(0,1:23), selected = 12),
+                                        selectInput(inputId = "e_hour", label = "Select End Hour",
+                                                    choices = c(0,1:23), selected = 14),
+                                        textInput(inputId = 'work_type', label = 'Work Type', value = 'minor maintenance', width = '100%', placeholder = 'Type of the Road Work.'),
+                                        actionButton(inputId = 'book', label = 'Book the Road Work Schedule')
                                     ), # end of sidebarPanel
 
                                     # Show a plot of the map
@@ -115,7 +119,7 @@ ui <- dashboardPage(skin = "blue",
                         tabItem(tabName = 'evaluation',
                             fluidPage(
                               # tab/page title
-                              titlePanel('Evaluation'),
+                              titlePanel('Conflict Management'),
                               sidebarLayout(
                                   sidebarPanel(
                                       h3('Select the Date.'),
@@ -177,6 +181,18 @@ server <- function(input, output) {
         datatable()
     })
 
+    observeEvent(input$book, {
+        start_date <- as.character(input$date_range[1])
+        end_date <- as.character(input$date_range[2])
+        start_time <- paste(as.character(input$s_hour), ':00', sep = '')
+        end_time <- paste(as.character(input$e_hour), ':00', sep = '')
+        work_type <- input$work_type
+        desc <- as.character(input$segment)
+        road_work_info <- c(start_date, start_time, end_date, end_time, work_type, desc)
+        planned_works <- rbind(planned_works, road_work_info)
+        write.csv(planned_works, file = '../Data/planned_works.csv', row.names = FALSE)
+    })  
+  
     output$traffic_flow <- renderPlot({
         # select segment
         if (input$segment2 == 'A5'){
@@ -217,3 +233,4 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
