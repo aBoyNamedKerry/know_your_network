@@ -10,10 +10,11 @@ library(DT)
 library(png)
 
 
-logo <- readPNG('../Data/kyn.png')
 srn <- st_read("../Outputs/birmingham_srn_wider.shp")
+#logo <- readPNG('../Data/kyn.png')
+#srn <- st_read("./Data/network.shp")
+#events <- read_csv("../Data/events_next_week_birmingham.csv")
 
-events <- read_csv("../Data/events_next_week_birmingham.csv")
 source("api_call.R")
 #traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
 traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
@@ -49,12 +50,16 @@ ui <- dashboardPage(skin = "blue",
                                     sidebarPanel(
                                         h3("Choose event date range"),
                                         #data range in
-                                        dateRangeInput(inputId = "date_range", label = "Date Range", 
-                                            start = Sys.Date(),
-                                            end = Sys.Date() + 3,
-                                            min = Sys.Date()
-                                            ),
-                                                  
+                                        dateRangeInput(inputId = "date_range",
+                                                       label = "Date Range",
+                                                       start = Sys.Date(),
+                                                       end = Sys.Date() + 3,
+                                                       min = Sys.Date()
+                                                       ),
+                                        selectInput(inputId = 'area',
+                                                    label = 'Select area',
+                                                    c('Birmingham', 'Manchester', 'Portsmouth')
+                                                    ),
                                         selectInput(inputId = "segment", label = "Select segment", 
                                                     choices =  srn$SECT_LABEL, 
                                                     selected =  srn$SECT_LABEL[1]
@@ -129,9 +134,10 @@ ui <- dashboardPage(skin = "blue",
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    #create reactive events object
-  events_react<- reactive({
-    df <- get_events(date_from = input$date_range[1],
+  #create reactive events object
+  events_react <- reactive({
+    df <- get_events(location = input$area,
+                     date_from = input$date_range[1],
                      date_to = input$date_range[2])
     df
   })
@@ -160,7 +166,7 @@ server <- function(input, output) {
   })
 
     output$events_table<- renderDataTable ({
-        events_react() %>% select(headline, startDate, venue.id) %>%
+        events_react() %>% select(headline, title, startDate, endDate, venue.name, venue.address.streetAddress) %>%
         datatable()
     })
 
@@ -174,20 +180,20 @@ server <- function(input, output) {
         
         # obtaining days
         id = input$weekday
-        
+
         # plot barchart of number of vehicles every 15 minutes
         selected_day <- data[data$Day.Type.ID %in% id, ]
         aggr <- aggregate(selected_day$Total.Carriageway.Flow, list(selected_day$Local.Time), mean)
         colnames(aggr) <- c('time_of_day', 'traffic_flow')
         attach(aggr)
         barplot(traffic_flow, width = .25, space = 0, names.arg = time_of_day, xlim = c(0, 24))
-        
+
         start_time = input$time[1]
         end_time = input$time[2]
         abline(v = start_time, col = 'blue', lwd = 2)
         abline(v = end_time, col = 'blue', lwd = 2)
     })
-     
+
     output$calendar <- renderDataTable({
         events_on_the_day <- events %>% filter(startDate <= input$cal_date & endDate >= input$cal_date) %>%
             select(c(startDate, startTime = 'startTimeString', endDate, endTime = 'endTimeString', title, description)) %>%
