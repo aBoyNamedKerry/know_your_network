@@ -15,7 +15,7 @@ library(sf)
 library(tidyverse)
 library(magrittr)
 library(janitor)
-library(DT)
+library(DT) 
 
 
 srn <- st_read("../Outputs/birmingham_srn_wider.shp")
