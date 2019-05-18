@@ -26,7 +26,6 @@ plot(birmingham_srn)
 #transform data
 birmingham_srn<- st_transform(birmingham_srn, crs = "+init=epsg:4326")
 
-
 #transfomr srn
 srn<- st_transform(srn, crs = "+init=epsg:4326")
 
@@ -78,12 +77,6 @@ leaflet(birmingham_srn) %>%
   addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
               color = ~birmingham_srn_col(birmingham_srn$Jan_01),
               popup = ~srn_pop) 
-
-leaflet(srn) %>%
-  addProviderTiles(providers$CartoDB.Positron)%>%
-  addPolygons(stroke = TRUE, fillOpacity = 0, weight = 1,
-              color = "blue") 
-
 
 #
 
