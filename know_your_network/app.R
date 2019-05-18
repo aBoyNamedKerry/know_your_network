@@ -25,62 +25,57 @@ traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
+                  
+                    dashboardHeader(title = "Know your network!"),
+                    
+                    dashboardSidebar(
+                      sidebarMenu(
+                        menuItem("Events", tabName = "events", icon = icon("dashboard")),
+                        menuItem('Analysis', tabName = 'analysis', icon = icon('bar-chart-o'))
+                      )
+                                       ), # end of dashboard sidebar
+                    
+                    dashboardBody(
+                      tabItems(
+                        tabItem(tabName = "events",
+                        fluidPage(
+                                  # Application title
+                                  titlePanel("Event planner"),
+                                  # Sidebar with a selectInput 
+                                  sidebarLayout(
+                                    sidebarPanel(
+                                       h3("Choose event date range"),
+                                      #data range in
+                                      dateRangeInput(inputId = "date_range", label = "Date Range", 
+                                                     start = min(events$startDate), 
+                                                     end = max(events$startDate)),
+                                      
+                                      selectInput(inputId = "segment", label = "Select segment", 
+                                                  choices =  srn$SECT_LABEL, 
+                                                  selected =  srn$SECT_LABEL[1]
+                                                      ),
+                                      selectInput(inputId = "hour", label = "Select hour",
+                                                  choices = c(0,1:23), selected = 12)
+                                   
+                                    ), # end of sidebarPanel
+                                    
+                                    # Show a plot of the map
+                                    mainPanel(
+                                     # splitLayout(cellWidths = c("60%", "40%"),
 
-  dashboardHeader(title = "Know your network!"),
+                                      box(leafletOutput("map"), width = 12, height = "420px"), 
+                                      
+                                      
+                                      box(column(dataTableOutput("events_table"),
+                                                 width = 12),
+                                          width = 12)
 
-  dashboardSidebar(
-  sidebarMenu(
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem('Analysis', tabName = 'analysis', icon = icon('bar-chart-o'))
-  )
-                   ), # end of dashboard sidebar
-
-  dashboardBody(
-
-    tabItems(
-
-      tabItem(tabName = 'dashboard',
-
-        fluidPage(
-
-              # Application title
-              titlePanel("Event planner"),
-
-
-              # Sidebar with a selectInput
-              sidebarLayout(
-
-                sidebarPanel(
-                   h3("Choose event date range"),
-
-                  #data range input
-                  dateRangeInput(inputId = "data_range", label = "Date Range",
-                                 start = "2018-06-01", end = "2018-08-31"),
-
-                  selectInput(inputId = "segment", label = "Select segment",
-                              choices =  srn$ROA_NUMBER
-                                  )
-
-                ), # end of sidebarPanel
-
-                # Show a plot of the map
-                mainPanel(
-                 # splitLayout(cellWidths = c("60%", "40%"),
-
-                  leafletOutput("map"),
-
-                  dataTableOutput("events_table")
-                  #)#split layout end
-
-                )# end main panel
-
-              )# end side panel
-
-            )# end fluid page
-
-          ),# end tabItem
-
-      tabItem(tabName = 'analysis',
+                                      #)#split layout end
+                                    )# end main panel
+                                  )# end side panel
+                                )# end fluid page
+                        ) #end of tabitem
+                        tabItem(tabName = 'analysis',
 
         fluidRow(
 
@@ -120,11 +115,9 @@ ui <- dashboardPage(skin = "blue",
         ) # end of fluidPage
 
       ) # end of tabItem
-
-    ) # end tabItems
-
-  )# dashboard body
-
+                        
+                      ) # end of tabitems
+                   )# dashboard body
 )# End of dashboard page
 
 # Define server logic required to draw a histogram
@@ -171,6 +164,7 @@ server <- function(input, output) {
    })
 
    output$events_table<- renderDataTable ({
+
      events_react() %>% select(headline, startDate, venue.id) %>%
      datatable()
    })
