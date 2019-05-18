@@ -54,7 +54,7 @@ ui <- dashboardPage(skin = "blue",
                                                        ),
                                         selectInput(inputId = 'area',
                                                     label = 'Select area',
-                                                    c('Birmingham', 'Manchester', 'Milton Keynes', 'Portsmouth')
+                                                    c('Birmingham', 'Manchester', 'Portsmouth')
                                                     ),
                                         selectInput(inputId = "segment", label = "Select segment", 
                                                     choices =  srn$SECT_LABEL, 
@@ -163,7 +163,7 @@ server <- function(input, output) {
     })
 
     output$events_table<- renderDataTable ({
-        events_react() %>% select(headline, startDate, venue.id) %>%
+        events_react() %>% select(headline, title, startDate, endDate, venue.name, venue.address.streetAddress) %>%
         datatable()
     })
 
@@ -177,20 +177,20 @@ server <- function(input, output) {
         
         # obtaining days
         id = input$weekday
-        
+
         # plot barchart of number of vehicles every 15 minutes
         selected_day <- data[data$Day.Type.ID %in% id, ]
         aggr <- aggregate(selected_day$Total.Carriageway.Flow, list(selected_day$Local.Time), mean)
         colnames(aggr) <- c('time_of_day', 'traffic_flow')
         attach(aggr)
         barplot(traffic_flow, width = .25, space = 0, names.arg = time_of_day, xlim = c(0, 24))
-        
+
         start_time = input$time[1]
         end_time = input$time[2]
         abline(v = start_time, col = 'blue', lwd = 2)
         abline(v = end_time, col = 'blue', lwd = 2)
     })
-     
+
     output$calendar <- renderDataTable({
         events_on_the_day <- events %>% filter(startDate <= input$cal_date & endDate >= input$cal_date) %>%
             select(c(startDate, startTime = 'startTimeString', endDate, endTime = 'endTimeString', title, description)) %>%
