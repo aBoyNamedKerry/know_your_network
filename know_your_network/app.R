@@ -1,12 +1,3 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(shinydashboard)
 library(leaflet)
@@ -18,7 +9,8 @@ library(janitor)
 library(DT) 
 library(png)
 
-# logo <- readPNG('../Data/kyn.png')
+
+logo <- readPNG('../Data/kyn.png')
 srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
 events <- read_csv("../Data/events_next_week_birmingham.csv")
@@ -33,12 +25,9 @@ planned_works$endDate <- as.Date(as.character(planned_works$endDate))
 
 # Define UI for application that draws a histogram
 DBheader <- dashboardHeader(title = "Know your network!")
-# DBheader$children[2]$children <- tags$a(tags$img(src = 'logo.png', height = '20', width = '20'))
 
 ui <- dashboardPage(skin = "blue",
-
                     DBheader,
-                    
                     dashboardSidebar(
                         sidebarMenu(
                             menuItem("Events", tabName = "events", icon = icon("dashboard")),
@@ -46,7 +35,6 @@ ui <- dashboardPage(skin = "blue",
                             menuItem('Evaluation', tabName = 'evaluation', icon = icon('calendar'))
                         )
                     ), # end of dashboard sidebar
-                    
                     dashboardBody(
                         tabItems(
                             tabItem(tabName = "events",
