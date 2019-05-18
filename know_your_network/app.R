@@ -35,7 +35,6 @@ ui <- dashboardPage(skin = "blue",
                                        ), # end of dashboard sidebar
                     
                     dashboardBody(
-
                       tabItems(
                         tabItem(tabName = "events",
                         fluidPage(
@@ -56,15 +55,12 @@ ui <- dashboardPage(skin = "blue",
                                                       ),
                                       selectInput(inputId = "hour", label = "Select hour",
                                                   choices = c(0,1:23), selected = 12)
-
+                                   
                                     ), # end of sidebarPanel
                                     
                                     # Show a plot of the map
                                     mainPanel(
-                                                               
-                                      leafletOutput("map"),
-                                      
-                                      dataTableOutput("events_table")
+                                     # splitLayout(cellWidths = c("60%", "40%"),
 
                                       box(leafletOutput("map"), width = 12, height = "420px"), 
                                       
@@ -77,8 +73,9 @@ ui <- dashboardPage(skin = "blue",
                                     )# end main panel
                                   )# end side panel
                                 )# end fluid page
-                   
-                    )# dashboard body
+                        ) #end of tabitem 
+                      ) # end of tabitems
+                   )# dashboard body
 )# End of dashboard page
 
 # Define server logic required to draw a histogram
@@ -125,6 +122,7 @@ server <- function(input, output) {
    })
 
    output$events_table<- renderDataTable ({
+
      events_react() %>% select(headline, startDate, venue.id) %>%
      datatable()
    })
