@@ -59,8 +59,10 @@ ui <- dashboardPage(skin = "blue",
                                         h3("Choose event date range"),
                                         #data range in
                                         dateRangeInput(inputId = "date_range", label = "Date Range", 
-                                            start = min(events$startDate), 
-                                            end = max(events$startDate)),
+                                            start = Sys.Date(),
+                                            end = Sys.Date() + 7,
+                                            min = Sys.Date()
+                                            ),
                                                   
                                         selectInput(inputId = "segment", label = "Select segment", 
                                                     choices =  srn$SECT_LABEL, 
@@ -145,7 +147,7 @@ ui <- dashboardPage(skin = "blue",
                                       
                                       # data input
                                       dateInput(inputId = "cal_date", label = "Date Range", 
-                                                value = min(events$startDate), 
+                                                min = Sys.Date(),
                                                 format = 'dd-mm-yyyy', 
                                                 datesdisabled = FALSE)
                                       
@@ -175,20 +177,20 @@ ui <- dashboardPage(skin = "blue",
 server <- function(input, output) {
 
     #create reactive events object
-    events_react<- reactive({
-    
-        df<- events %>% filter(startDate>= input$date_range[1],
-                               startDate<= input$date_range[2])
-        
-        # df<- get_events(date_from = input$date_range[1],
-        #                 date_to = input$date_range[2])
-        # df %>%
-        #   dplyr::select(headline, startDate, venue.id, venue.location.lat,
-        #          venue.location.lon) %>% filter(!is.na(venue.location.lon))
-        # df
-        #
-    })
-    
+  events_react<- reactive({
+  
+      #df<- events %>% filter(startDate>= input$date_range[1],
+      #                       startDate<= input$date_range[2])
+
+      df <- get_events(date_from = input$date_range[1],
+                       date_to = input$date_range[2])
+      # df %>%
+      #   dplyr::select(headline, startDate, venue.id, venue.location.lat,
+      #          venue.location.lon) %>% filter(!is.na(venue.location.lon))
+      #
+    df
+  })
+
     output$map <- renderLeaflet({
     
         # generate bins based on input$bins from ui.R
