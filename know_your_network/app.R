@@ -48,7 +48,7 @@ ui <- dashboardPage(skin = "blue",
                                         #data range in
                                         dateRangeInput(inputId = "date_range", label = "Date Range", 
                                             start = Sys.Date(),
-                                            end = Sys.Date() + 7,
+                                            end = Sys.Date() + 3,
                                             min = Sys.Date()
                                             ),
                                                   
@@ -85,7 +85,7 @@ ui <- dashboardPage(skin = "blue",
                                         selectInput(inputId = 'weekday', label = 'Weekday',
                                                     choices = c('Monday' = 0, 'Tuesday' = 1, 'Wednesday' = 2,
                                                                 'Thursday' = 3, 'Friday' = 4, 'Saturday' = 5,
-                                                                'Saunday' = 6),
+                                                                'Sunday' = 6),
                                                     selected = 0,
                                                     multiple = TRUE),
                                         sliderInput(inputId = 'time', label = 'Time',
@@ -144,7 +144,7 @@ server <- function(input, output) {
                          "<br>",
                          "Location: ",
                          srn$LOCATION)
-        
+
         srn_col<- colorFactor(c("red", "green"), as.factor(srn$Jan_01))
         m <- leaflet(srn) %>%
             addProviderTiles(providers$CartoDB.Positron)%>%
@@ -157,7 +157,6 @@ server <- function(input, output) {
     })
 
     output$events_table<- renderDataTable ({
-    
         events_react() %>% select(headline, startDate, venue.id) %>%
         datatable()
     })
