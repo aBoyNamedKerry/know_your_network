@@ -62,10 +62,6 @@ ui <- dashboardPage(skin = "blue",
                                     # Show a plot of the map
                                     mainPanel(
                                                                
-                                      leafletOutput("map"),
-                                      
-                                      dataTableOutput("events_table")
-
                                       box(leafletOutput("map"), width = 12, height = "420px"), 
                                       
                                       
@@ -77,6 +73,8 @@ ui <- dashboardPage(skin = "blue",
                                     )# end main panel
                                   )# end side panel
                                 )# end fluid page
+                        )
+                      )
                    
                     )# dashboard body
 )# End of dashboard page
