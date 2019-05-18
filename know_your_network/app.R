@@ -18,7 +18,7 @@ srn%<>%
                   replace = TRUE, prob = c(0.95, 0.05)))
 #logo <- readPNG('../Data/kyn.png')
 #srn <- st_read("./Data/network.shp")
-#events <- read_csv("../Data/events_next_week_birmingham.csv")
+events <- read_csv("../Data/events_next_week_birmingham.csv")
 
 source("api_call.R")
 #traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
