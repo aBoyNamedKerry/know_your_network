@@ -19,6 +19,8 @@ library(DT)
 
 srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
+events <- read_csv("../Data/events_next_week_birmingham.csv")
+source("api_call.R")
 #traffic_A38M <- read.csv('../Data/A38(M)_traffic.csv', skip = 3)
 traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
 traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
@@ -61,16 +63,13 @@ ui <- dashboardPage(skin = "blue",
                         
                         # Show a plot of the map
                         mainPanel(
-                            # splitLayout(cellWidths = c("60%", "40%"),
 
-                                box(leafletOutput("map"), width = 12, height = "420px"), 
-                                
-                                
-                                box(column(dataTableOutput("events_table"),
-                                           width = 12),
-                                    width = 12)
+                            box(leafletOutput("map"), width = 12, height = "420px"), 
 
-                            # )#split layout end
+
+                            box(column(dataTableOutput("events_table"),
+                                       width = 12),
+                                width = 12)
                             
                         )# end main panel
                         
