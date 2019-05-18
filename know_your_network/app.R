@@ -18,7 +18,7 @@ library(janitor)
 library(DT) 
 library(png)
 
-logo <- readPNG('../Data/kyn.png')
+# logo <- readPNG('../Data/kyn.png')
 srn<- st_read("../Outputs/birmingham_srn.shp")
 #srn <- st_read("./Data/network.shp")
 events <- read_csv("../Data/events_next_week_birmingham.csv")
@@ -28,10 +28,12 @@ traffic_A5 <- read.csv('../Data/A5_traffic.csv', skip = 3)
 traffic_M6 <- read.csv('../Data/M6_traffic.csv', skip = 3)
 planned_works <- read.csv('../Data/planned_works.csv')
 colnames(planned_works) <- c('startDate', 'startTime', 'endDate', 'endTime', 'workType', 'description')
+planned_works$startDate <- as.Date(as.character(planned_works$startDate))
+planned_works$endDate <- as.Date(as.character(planned_works$endDate))
 
 # Define UI for application that draws a histogram
 DBheader <- dashboardHeader(title = "Know your network!")
-DBheader$children[2]$children <- tags$a(tags$img(src = 'logo.png', height = '60', width = '60'))
+# DBheader$children[2]$children <- tags$a(tags$img(src = 'logo.png', height = '20', width = '20'))
 
 ui <- dashboardPage(skin = "blue",
 
@@ -243,10 +245,10 @@ server <- function(input, output) {
     output$calendar <- renderDataTable({
         
         events_on_the_day <- events %>% filter(startDate <= input$cal_date & endDate >= input$cal_date) %>%
-            select(startDate, startTimeString, endDate, endTimeString, title, description) %>%
+            select(c(startDate, startTime = 'startTimeString', endDate, endTime = 'endTimeString', title, description)) %>%
             as.data.frame()
         works_on_the_day <- planned_works %>% filter(startDate <= input$cal_date & endDate >= input$cal_date) %>% 
-            select(startDate, startTime, endDate, endTime, workType, description) %>%
+            select(c(startDate, startTime, endDate, endTime, title = 'workType', description)) %>%
             as.data.frame()
         all_on_the_day <- as.data.frame(rbind(events_on_the_day, works_on_the_day))
         # colnames(all_on_the_day) <- c('Start Date', 'Start Time', 'End Date', 'End Time', 'Event Title/Work Type', 'Description')
