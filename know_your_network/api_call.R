@@ -3,10 +3,13 @@ library(jsonlite)
 library(dotenv)
 
 get_events <- function(location = 'Birmingham', date_from = Sys.Date(), date_to = Sys.Date() + 7){
-  username <- "Paste_API_Username_Here"
-  password <- "Paste_API_Password_Here"
+ 
 
   dotenv::load_dot_env()
+  
+  CLIENT_ID="4bbe9604e1f80f7a9f90b43fa27ec7460bd61855"
+  CLIENT_SECRET="1a77e0b42b59f4619e8e20e74e1a2dd6d55b1f40"
+  
   
   base <- "https://api.ents24.com/auth/token"
   body <- list(client_id = CLIENT_ID, client_secret = CLIENT_SECRET)
@@ -24,4 +27,4 @@ get_events <- function(location = 'Birmingham', date_from = Sys.Date(), date_to 
   response_df
 }
 
-df <- get_events(location = 'Birmingham', date_from = '2019-05-18', date_to = '2019-05-22')
+#df <- get_events(location = 'Birmingham', date_from = '2019-05-18', date_to = '2019-05-22')

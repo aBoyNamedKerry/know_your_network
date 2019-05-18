@@ -20,7 +20,8 @@ library(DT)
 
 srn <- st_read("../Outputs/birmingham_srn_wider.shp")
 events <- read_csv("../Data/events_next_week_birmingham.csv")
-#srn <- st_read("../Data/network.shp")
+source("api_call.R")
+
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "blue",
@@ -29,13 +30,13 @@ ui <- dashboardPage(skin = "blue",
                     
                     dashboardSidebar(
                       sidebarMenu(
-                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"))
+                        menuItem("Events", tabName = "events", icon = icon("dashboard"))
                       )
                                        ), # end of dashboard sidebar
                     
                     dashboardBody(
                       tabItems(
-                        tabItem(tabName = "dashboard",
+                        tabItem(tabName = "events",
                         fluidPage(
                                   # Application title
                                   titlePanel("Event planner"),
@@ -61,9 +62,11 @@ ui <- dashboardPage(skin = "blue",
                                     mainPanel(
                                      # splitLayout(cellWidths = c("60%", "40%"),
 
-                                      box(leafletOutput("map"), width = 12, height = "450px"),
+                                      box(leafletOutput("map"), width = 12, height = "420px"), 
                                       
-                                      box(dataTableOutput("events_table"),
+                                      
+                                      box(column(dataTableOutput("events_table"),
+                                                 width = 12),
                                           width = 12)
 
                                       #)#split layout end
@@ -83,14 +86,26 @@ server <- function(input, output) {
     
     df<- events %>% filter(startDate>= input$date_range[1],
                            startDate<= input$date_range[2])
-    
-  })
+
+
   
+    # df<- get_events(date_from = input$date_range[1],
+    #                 date_to = input$date_range[2])
+    # df %>%
+    #   dplyr::select(headline, startDate, venue.id, venue.location.lat,
+    #          venue.location.lon) %>% filter(!is.na(venue.location.lon))
+    # df
+    # 
+  })
+    
   output$map <- renderLeaflet({
 
    # generate bins based on input$bins from ui.R
    srn_pop <- paste0("Road Number: ",
                      srn$ROA_NUMBER,
+                     "<br>",
+                     "Section: ",
+                     srn$SECT_LABEL,
                      "<br>",
                      "Location: ",
                      srn$LOCATION)
@@ -102,7 +117,8 @@ server <- function(input, output) {
                   color = ~srn_col(srn$Jan_01),
                   popup = ~srn_pop)
    m %>%
-      addMarkers(lng=events_react()$venue.location.lon, lat=events_react()$venue.location.lat, popup=events_react()$headline)
+      addMarkers(lng=events_react()$venue.location.lon, lat=events_react()$venue.location.lat,
+                 popup=paste0(events_react()$headline, "<br>", events_react()$startDate))
    })
 
    output$events_table<- renderDataTable ({
